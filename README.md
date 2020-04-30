@@ -5,6 +5,7 @@ A simple arduino sketch that sends temperature, pressure, humidity and light lev
 
 # Required hardware
 - [NodeMcu V3](https://www.aliexpress.com/item/32665100123.html?spm=a2g0s.9042311.0.0.105d4c4dNoFD6G)
+- [NodeMCU Firmware](https://github.com/sleemanj/ESP8266_Simple/raw/master/firmware/ai-thinker-0.9.5.2-115200.bin)
 - [BME280](https://www.aliexpress.com/item/32849462236.html?spm=a2g0s.9042311.0.0.105d4c4dNoFD6G) (Temperature, Pressure and Humidity sensor)
 - [BH1750](https://www.aliexpress.com/item/32421754536.html?spm=a2g0s.9042311.0.0.105d4c4dNoFD6G) (Light sensor)
 
