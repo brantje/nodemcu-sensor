@@ -1,8 +1,6 @@
 # nodemcu-sensor
 A simple arduino sketch that sends temperature, pressure, humidity and light level via mqtt
 
-# WIP WIP WIP WIP WIP WIP WIP
-
 # Required hardware
 - [NodeMcu V3](https://www.aliexpress.com/item/32665100123.html?spm=a2g0s.9042311.0.0.105d4c4dNoFD6G)
 - [BME280](https://www.aliexpress.com/item/32849462236.html?spm=a2g0s.9042311.0.0.105d4c4dNoFD6G) (Temperature, Pressure and Humidity sensor)
