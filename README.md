@@ -20,6 +20,9 @@ A simple arduino sketch that sends temperature, pressure, humidity and light lev
 - [MQTT Library for Arduino](https://github.com/256dpi/arduino-mqtt)
 - [BH1750 library](https://github.com/claws/BH1750)
 
+# Wiring
+![Wiring](https://github.com/brantje/nodemcu-sensor/raw/master/wiring.png)
+
 # Setup
 - Follow [this](https://www.instructables.com/id/Getting-Started-With-ESP8266LiLon-NodeMCU-V3Flashi/) setup guide.
   
