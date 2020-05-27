@@ -160,7 +160,10 @@ void reconnectMqtt() {
   mqtt.disconnect();
   Serial.print("Attempting MQTT connection...");
   // Attempt to connect
-  if (mqtt.connect(broker, mqttUser, mqttPass)) {
+  int len = room.length()+1;
+  char clientid[len];
+  room.toCharArray(clientid, len);
+  if (mqtt.connect(clientid, mqttUser, mqttPass)) {
     Serial.println("connected");
   } else {
     Serial.print("failed!");
