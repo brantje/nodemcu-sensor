@@ -49,11 +49,18 @@ void setup() {
 
   // Set the I2C bus
   Wire.begin(D2, D1);
-
+  
   if (!bme.begin(0x76)) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
+
+  bme.setSampling(
+    Adafruit_BME280::MODE_FORCED,
+    Adafruit_BME280::SAMPLING_X1,
+    Adafruit_BME280::SAMPLING_X1,
+    Adafruit_BME280::SAMPLING_X1,
+    Adafruit_BME280::FILTER_OFF);
 
   if (!lightMeter.begin()) {
     Serial.println("Could not find a valid BH1750 sensor, check wiring!");
@@ -65,14 +72,15 @@ void setup() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
-
+  WiFi.hostname("esp-sensor-" + room);
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
   }
+
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println();
@@ -88,17 +96,30 @@ void setup() {
   }
   Serial.println("");
   Serial.println("You're connected to the MQTT broker!");
+  delay(500);
   //sendConfig();
+  sendConfig();
+  sendData();
+  delay(500);
+  mqtt.disconnect();
   // Make sure data is send after setup
-  lastMillis = millis() - (sendInterval * 1000) - 1;
+  int sleepTime = sendInterval * 1000000;
+  ESP.deepSleep(sleepTime);
+  //lastMillis = millis() - (sendInterval * 1000) - 1;
 }
 
 /**************************
    M E T H O D S
 **************************/
 void sendData() {
-
+  bme.takeForcedMeasurement();
   float temperature = bme.readTemperature();
+  if (tempCorrection < 0) {
+    temperature = temperature - abs(tempCorrection);
+  } else {
+    temperature = temperature + abs(tempCorrection);
+  }
+
   float pressure = bme.readPressure() / 100.0F;
   float humidity = bme.readHumidity();
   float lux = lightMeter.readLightLevel();
@@ -128,12 +149,13 @@ void sendData() {
   payloadObj["light"] = (double) roundDescimals(lux);
   String statePayload;
   serializeJsonPretty(payloadObj, statePayload);
-  mqtt.publish(stateTopic, statePayload);
+  
+  mqtt.publish(stateTopic, statePayload, true, 0);
   //  String topicTemp = discoveryPrefix + "sensor/" + room + "/temperature";
   //  String topicPressure = discoveryPrefix + "sensor/" + room + "/pressure";
   //  String topicHumidity = discoveryPrefix + "sensor/" + room + "/humidity";
   //  String topicLight = discoveryPrefix + "sensor/" + room + "/light";
-  //
+  // 
   //  mqtt.publish(topicTemp, (String) temperature);
   //  mqtt.publish(topicPressure, (String) pressure);
   //  mqtt.publish(topicHumidity, (String) humidity);
@@ -160,7 +182,7 @@ void reconnectMqtt() {
   mqtt.disconnect();
   Serial.print("Attempting MQTT connection...");
   // Attempt to connect
-  int len = room.length()+1;
+  int len = room.length() + 1;
   char clientid[len];
   room.toCharArray(clientid, len);
   if (mqtt.connect(clientid, mqttUser, mqttPass)) {
@@ -173,7 +195,7 @@ void reconnectMqtt() {
   }
 }
 
-float roundDescimals(float number){
+float roundDescimals(float number) {
   float multiplied = number * 100;
   int ni = (int) multiplied;
   float fni = (float) ni;
@@ -190,7 +212,7 @@ void sendConfig() {
   String payload1;
   serializeJsonPretty(payloadObj, payload1);
   String topic1 = discoveryPrefix + "sensor/" + room + "T/config";
-  mqtt.publish(topic1, payload1);
+  mqtt.publish(topic1, payload1, true, 0);
 
   payloadObj["device_class"] = "humidity";
   payloadObj["name"] = displayName + " Humidity";
@@ -200,7 +222,7 @@ void sendConfig() {
   String payload2;
   serializeJsonPretty(payloadObj, payload2);
   String topic2 = discoveryPrefix + "sensor/" + room + "H/config";
-  mqtt.publish(topic2, payload2);
+  mqtt.publish(topic2, payload2, true, 0);
 
   payloadObj["device_class"] = "pressure";
   payloadObj["name"] = displayName + " Pressure";
@@ -210,7 +232,7 @@ void sendConfig() {
   String payload3;
   serializeJsonPretty(payloadObj, payload3);
   String topic3 = discoveryPrefix + "sensor/" + room + "P/config";
-  mqtt.publish(topic3, payload3);
+  mqtt.publish(topic3, payload3, true, 0);
 
   payloadObj["device_class"] = "illuminance";
   payloadObj["name"] = displayName + " Illuminance";
@@ -220,29 +242,30 @@ void sendConfig() {
   String payload4;
   serializeJsonPretty(payloadObj, payload4);
   String topic4 = discoveryPrefix + "sensor/" + room + "L/config";
-  mqtt.publish(topic4, payload4);
+  mqtt.publish(topic4, payload4, true, 0);
 }
 
 /**************************
    L O O P
 **************************/
 void loop() {
-  if (WiFi.status() == WL_CONNECTION_LOST || WiFi.status() == WL_DISCONNECTED) {
+  /*
+    if (WiFi.status() == WL_CONNECTION_LOST || WiFi.status() == WL_DISCONNECTED) {
     Serial.print("Wifi not connected?");
     reconnectWifi();
-  }
+    }
 
-  if (!mqtt.connected()) {
+    if (!mqtt.connected()) {
     Serial.println("No mqtt connection?");
     reconnectMqtt();
-  }
+    }
 
-  mqtt.loop();
-  
-  if (millis() - lastMillis > (sendInterval * 1000)) {
+    mqtt.loop();
+
+    if (millis() - lastMillis > (sendInterval * 1000)) {
     lastMillis = millis();
     sendConfig();
     sendData();
-  }
-  delay(500);
+    }
+    delay(500);*/
 }
